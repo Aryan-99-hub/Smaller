@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Puzzled – Mystery Doors</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+/* ColoURSS */
+body {
+    margin: 0;
+    height: 100vh;
+    background: radial-gradient(circle at top, #1b2735, #090a0f);
+    font-family: 'Segoe UI', sans-serif;
+    color: #ffffff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/*stagess*/
+.stage {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.hidden { display: none; }
+
+/* Glass cardss*/
+.container {
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(12px);
+    padding: 50px 70px;
+    border-radius: 20px;
+    text-align: center;
+    box-shadow: 0 0 50px rgba(0,0,0,0.6);
+}
+
+/* Clicks....Buttons */
+button {
+    padding: 15px 38px;
+    font-size: 1.1em;
+    border-radius: 30px;
+    border: none;
+    cursor: pointer;
+    background: linear-gradient(45deg, #00f2fe, #4facfe);
+    color: #002b36;
+    font-weight: bold;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+button:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 25px #00f2fe;
+}
+
+/* dooorss*/
+.door-container {
+    display: flex;
+    gap: 40px;
+    margin-top: 40px;
+}
+
+.door {
+    width: 150px;
+    height: 260px;
+    border-radius: 12px;
+    cursor: pointer;
+    position: relative;
+    background: linear-gradient(145deg, #5a3e2b, #3b2618);
+    box-shadow:
+        inset 0 0 0 4px rgba(255,255,255,0.08),
+        inset 0 0 0 12px rgba(0,0,0,0.25),
+        0 12px 25px rgba(0,0,0,0.8);
+    transition: transform 0.25s, box-shadow 0.25s;
+}
+
+/* Door panelsss */
+.door::before,
+.door::after {
+    content: "";
+    position: absolute;
+    left: 15px;
+    right: 15px;
+    height: 35%;
+    background: rgba(0,0,0,0.25);
+    border-radius: 6px;
+}
+
+.door::before { top: 18px; }
+.door::after { bottom: 18px; }
+
+/* Door handle */
+.door span {
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    width: 12px;
+    height: 12px;
+    background: radial-gradient(circle, #ffd27d, #b8892c);
+    border-radius: 50%;
+    transform: translateY(-50%);
+    box-shadow: 0 0 8px rgba(255,210,125,0.8);
+}
+
+/* Hover */
+.door:hover {
+    transform: translateY(-12px);
+    box-shadow:
+        inset 0 0 0 4px rgba(255,255,255,0.12),
+        inset 0 0 0 12px rgba(0,0,0,0.25),
+        0 20px 40px rgba(0,0,0,0.9);
+}
+
+/* shake modulee*/
+.door.shake {
+    animation: shake 0.45s;
+}
+
+@keyframes shake {
+    0% { transform: translateX(0); }
+    20% { transform: translateX(-12px); }
+    40% { transform: translateX(12px); }
+    60% { transform: translateX(-12px); }
+    80% { transform: translateX(12px); }
+    100% { transform: translateX(0); }
+}
+
+/* modalss*/
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: rgba(255,255,255,0.95);
+    color: #222;
+    padding: 35px;
+    border-radius: 16px;
+    max-width: 420px;
+    text-align: center;
+    animation: pop 0.35s ease;
+}
+
+@keyframes pop {
+    from { transform: scale(0.6); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+input {
+    width: 90%;
+    padding: 10px;
+    margin-top: 15px;
+    font-size: 1em;
+    border-radius: 8px;
+    border: 2px solid #4facfe;
+}
+</style>
+</head>
+
+<body>
+
+<!-- STAGE 1 -->
+<div class="stage" id="stage-1">
+    <div class="container">
+        <h1>🧠 Puzzled</h1>
+        <p>Four identical doors. One mistake ends it.</p>
+        <button id="startBtn">Click Me First</button>
+    </div>
+</div>
+
+<!-- STAGE 2 -->
+<div class="stage hidden" id="stage-2">
+    <div class="container">
+        <h2>Choose Carefully</h2>
+
+        <div class="door-container" id="doors">
+            <div class="door" data-type="easy"><span></span></div>
+            <div class="door" data-type="medium"><span></span></div>
+            <div class="door" data-type="hard"><span></span></div>
+            <div class="door" data-type="death"><span></span></div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="modal">
+    <div class="modal-content">
+        <h3 id="modalTitle"></h3>
+        <p id="modalText"></p>
+        <input type="text" id="answerInput">
+        <br><br>
+        <button id="modalBtn">OK</button>
+    </div>
+</div>
+
+<script>
+/*STAGE SWITCH */
+const stage1 = document.getElementById("stage-1");
+const stage2 = document.getElementById("stage-2");
+
+document.getElementById("startBtn").onclick = () => {
+    stage1.classList.add("hidden");
+    stage2.classList.remove("hidden");
+};
+
+/* Questionssss */
+const riddles = {
+    easy: { q: "What has to be broken before you can use it?", a: "EGG" },
+    medium: { q: "Which number comes next in the series? 2, 4, 8, 16, ?", a: "32" },
+    hard: { q: "What gets wetter the more it dries?", a: "Towel" }
+};
+
+/* RANDOMIZE DOOR POSITIONSsssssss */
+const container = document.getElementById("doors");
+[...container.children].sort(() => Math.random() - 0.5)
+    .forEach(d => container.appendChild(d));
+
+/* .............MODALll........... */
+const modal = document.getElementById("modal");
+const title = document.getElementById("modalTitle");
+const text = document.getElementById("modalText");
+const input = document.getElementById("answerInput");
+const btn = document.getElementById("modalBtn");
+
+let currentDoor;
+
+/*LOGICCCCCCCCCC................*/
+document.querySelectorAll(".door").forEach(door => {
+    door.onclick = () => handleDoor(door);
+});
+
+function handleDoor(door) {
+    currentDoor = door;
+    const type = door.dataset.type;
+
+    if (type === "death") {
+        door.classList.add("shake");
+        setTimeout(() => door.classList.remove("shake"), 450);
+        showMessage(" RIP", "Bro… wrong door........U fuck always ");
+        return;
+    }
+
+    title.textContent = "Riddle Time";
+    text.textContent = riddles[type].q;
+    input.value = "";
+    input.style.display = "block";
+    btn.onclick = () => checkAnswer(riddles[type].a);
+    modal.style.display = "flex";
+}
+
+function checkAnswer(correct) {
+    if (input.value.trim().toUpperCase() === correct) {
+        showMessage(" Well Done BOYY!", "You are awesome… as always Smartass ");
+    } else {
+        modal.style.display = "none";
+        currentDoor.classList.add("shake");
+        setTimeout(() => {
+            currentDoor.classList.remove("shake");
+            showMessage(" Try Again", "Try again man… you failed .. you fail as usual ");
+        }, 450);
+    }
+}
+
+function showMessage(t, m) {
+    title.textContent = t;
+    text.textContent = m;
+    input.style.display = "none";
+    btn.onclick = () => modal.style.display = "none";
+    modal.style.display = "flex";
+}
+</script>
+
+</body>
+</html>
