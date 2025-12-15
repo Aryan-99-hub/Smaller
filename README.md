@@ -1,1 +1,3 @@
-# Smaller
+# wtf are u reading man .
+..............
+GO and Study 
